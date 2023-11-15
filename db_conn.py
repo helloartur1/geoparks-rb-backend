@@ -37,10 +37,10 @@ def query(query: str):
 
 
                 if data:
-                    return data[0][0]
+                    return data[0]
                 
                 
-                return {404}
+                return False
             
 
             except Exception as e: 

@@ -2,18 +2,24 @@ from pydantic import BaseModel
 
 
 class User(BaseModel):
+    id: int
     username: str
     password: str
+    role: str
+
+
+class TokenData(BaseModel):
+    username: str | None = None
 
 
 class ChangePictures(BaseModel):
-    object_id: int
+    id: int
     old_name: str
     new_name: str
 
 
 class DeletePicture(BaseModel):
-    object_id: int
+    id: int
     picture_name: str
 
 
