@@ -3,9 +3,9 @@ import psycopg2
 
 def query(query: str):
     try:
-        conn = psycopg2.connect(database='test', 
+        conn = psycopg2.connect(database='geopark',
                             user='postgres', 
-                            password='G89811325f', 
+                            password='1',
                             host='localhost', 
                             port='5432')
         cursor = conn.cursor()
@@ -39,53 +39,6 @@ def query(query: str):
             except Exception as e: 
                 print(e)
                 return {"Error"}
-
-           
-
-        # elif query.split(" ")[0] == "SELECT" and type == "all":
-        #     try:
-        #         cursor.execute(query)
-        #         data = cursor.fetchall()
-
-
-        #         if data:
-        #             return data[0]
-                
-                
-        #         return False
-            
-
-        #     except Exception as e: 
-        #         print(e)
-        #         return {"Error"}
-              
-              
-        # elif query.split(" ")[0] == "SELECT" and type == "one":
-        #     try:
-        #         cursor.execute(query)
-        #         return  cursor.fetchone()
-
-              
-        #     except Exception as e:
-        #         print(e)
-        #         return {"Error"}
-        
-
-        # elif query.split(" ")[0] == "UPDATE":
-        #     try:
-        #         print(data)
-            
-            
-        #         if data:
-        #             return data
-                
-                
-        #         return {404}
-              
-              
-        #     except Exception as e:
-        #         print(e)
-        #         return {"Error"}
 
 
         elif query.split(" ")[0] == "UPDATE":
