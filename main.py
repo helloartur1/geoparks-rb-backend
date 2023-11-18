@@ -59,10 +59,10 @@ def get_user(username: str): #получение информации о пол�
 
 
     user = models.User(
-        id = int(qry_username_result[0]),
-        username = qry_username_result[1],
-        password = qry_username_result[2],
-        role = qry_username_result[3],
+        id = int(qry_username_result[0][0]),
+        username = qry_username_result[0][1],
+        password = qry_username_result[0][2],
+        role = qry_username_result[0][3],
     )
     
 
@@ -121,7 +121,7 @@ def get_active_user(user_from_token: Annotated[models.User, Depends(get_user_fro
 
 def get_user_from_db(username: str, password: str): #получение айдишника пользователя из бд ???для проверки наличия пользователя???
     id_query = f"SELECT id FROM users WHERE username = '{username}' and password = '{password}'"
-    id_from_db = db_conn.query(id_query)[0]
+    id_from_db = db_conn.query(id_query)[0][0]
 
 
     if id_from_db:
@@ -129,6 +129,12 @@ def get_user_from_db(username: str, password: str): #получение айди
          
 
     return False
+
+
+@app.get("/test")
+async def test():
+    q = f"SELECT * FROM users"
+    return db_conn.query(q)
 
 
 @app.post("/login") #роут для аутентификации
@@ -253,51 +259,51 @@ async def delete_photo(picture_name: models.DeletePicture,
             )
 
 
-@app.get("/geoparks")
-async def get_data_about_geopark():
-    try:
-        connection = psycopg2.connect(**conn_params)
-        cursor = connection.cursor()
+# @app.get("/geoparks")
+# async def get_data_about_geopark():
+#     try:
+#         connection = psycopg2.connect(**conn_params)
+#         cursor = connection.cursor()
 
 
-        query = "SELECT * FROM geopark"
-        cursor.execute(query)
-        result = cursor.fetchall()
+#         query = "SELECT * FROM geopark"
+#         cursor.execute(query)
+#         result = cursor.fetchall()
 
 
-        cursor.close()
-        connection.close()
+#         cursor.close()
+#         connection.close()
 
 
-        return {"data": result}
+#         return {"data": result}
     
 
-    except Exception as e:
-        return {"error": str(e)}
+#     except Exception as e:
+#         return {"error": str(e)}
 
 
-@app.get("/geoobjects")
-async def get_data_about_geobject(long: float):
-    try:
-        connection = psycopg2.connect(**conn_params)
-        cursor = connection.cursor()
+# @app.get("/geoobjects")
+# async def get_data_about_geobject(long: float):
+#     try:
+#         connection = psycopg2.connect(**conn_params)
+#         cursor = connection.cursor()
 
 
-        query = f"SELECT * FROM geoobject WHERE longitude = '{long}'"
-        cursor.execute(query)
-        print(query)
-        result = cursor.fetchall()
+#         query = f"SELECT * FROM geoobject WHERE longitude = '{long}'"
+#         cursor.execute(query)
+#         print(query)
+#         result = cursor.fetchall()
 
 
-        cursor.close()
-        connection.close()
+#         cursor.close()
+#         connection.close()
 
 
-        return {"data": result}
+#         return {"data": result}
     
 
-    except Exception as e:
-        return {"error": str(e)}   
+#     except Exception as e:
+#         return {"error": str(e)}   
 
       
 class Data_geoobjects(BaseModel):
@@ -314,7 +320,8 @@ class Data_geoobjects(BaseModel):
 @app.get("/geoobjects/{id_object}")
 async def get_geoobject_via_id(id_object : UUID4):
     query = f"SELECT * FROM geoobject  WHERE id = '{id_object}'"
-    result = db_conn.query(query,"one")
+    result = db_conn.query(query)
+    result = result[0]
     res = Data_geoobjects(name=str(result[0]), description = str(result[1]), longitude = float(result[2]), latitude = float(result[3]), id = str(result[4]),
                 type = str(result[5]),idgeopark = str(result[6]))
     return res
@@ -323,7 +330,7 @@ async def get_geoobject_via_id(id_object : UUID4):
 @app.get("/geoobjects/")
 async def get_data_about_geobjects():
     query1 = f"SELECT * FROM geoobject"
-    result = db_conn.query(query1,"all")
+    result = db_conn.query(query1)
     i1= [Data_geoobjects(name=str(row[0]), description = str(row[1]), longitude = float(row[2]), latitude = float(row[3]), id = str(row[4]),
                   type = str(row[5]),idgeopark = str(row[6])) for row in result ]
     return i1
@@ -337,10 +344,12 @@ class Geoobject_by_geopark(BaseModel):
     type : str
     idgeopark : str
     namegeopark : str
+
+
 @app.get("/geoobjectsbyidpark")
 async def get_all_222(id_geopark : UUID4):
     query = f"SELECT geoobject.*, geopark.name FROM geoobject,geopark  WHERE geoobject.idgeopark = '{id_geopark}';"
-    result = db_conn.query(query,"all")
+    result = db_conn.query(query)
     res = [Geoobject_by_geopark(id=str(row[4]), name=str(row[0]), description=str(row[1]), longitude=float(row[2]),
               latitude=float(row[3]), type=str(row[5]), idgeopark = str(row[6]), namegeopark = str(row[7])
               ) for row in result]
@@ -348,9 +357,10 @@ async def get_all_222(id_geopark : UUID4):
 
 @app.get("/photo_by_geoobjectid")
 async def photo(id_geopark: UUID4):
-    query1 = f"SELECT path FROM photo where geopark_id = '{id_geopark}';"
-    result = db_conn.query(query1,"one")
-    return {"path":str(result[0])}
+    query1 = f"SELECT path FROM photo where geoobject_id = '{id_geopark}';"
+    result = db_conn.query(query1)
+    result = result[0][0]
+    return {"path":str(result)}
 
 @app.post("/add_photo")
 async def add_photo_by_id_geoobject(geoobject_id : UUID4, path_photo : str,preview_photo :bool):
@@ -358,7 +368,7 @@ async def add_photo_by_id_geoobject(geoobject_id : UUID4, path_photo : str,previ
     path_photo = "/geopark_image/" + path_photo
     query = f"INSERT INTO photo(id,path,preview,geoobject_id) VALUES('{id}','{path_photo}','{preview_photo}','{geoobject_id}');"
 
-    return db_conn.query(query,"")
+    return db_conn.query(query)
 
 class Data_geoobjects_with_photo(BaseModel):
     id : str
@@ -376,7 +386,7 @@ async def photo_all(id_geoobject: UUID4):
     query1 = (f"SELECT geoobject.id, geoobject.name, geoobject.description, geoobject.longitude, geoobject.latitude, geoobject.type, geoobject.idgeopark, ARRAY_AGG(photo.path) as paths from geoobject"
               f" JOIN photo ON geoobject.id = photo.geoobject_id WHERE photo.geoobject_id = '{id_geoobject}'  AND photo.preview = '1' GROUP BY geoobject.id")
 
-    result = db_conn.query(query1,"all")
+    result = db_conn.query(query1)
 
     res = [Data_geoobjects_with_photo(id=str(row[0]), name=str(row[1]), description=str(row[2]), longitude=float(row[3]),
                                 latitude=float(row[4]), type=str(row[5]), idgeopark=str(row[6]), path_photo = str(row[len(row) - 1][0]
@@ -391,7 +401,7 @@ class Paths(BaseModel):
 @app.get("/get_photo")
 async def photos(id_geoobject: UUID4):
     query = f"SELECT path FROM photo WHERE geoobject_id = '{id_geoobject}'"
-    result = db_conn.query(query,"all")
+    result = db_conn.query(query)
 
     res = [Paths(path = str(row[0])) for row in result]
 

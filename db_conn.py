@@ -24,68 +24,68 @@ def query(query: str):
       
 
         elif query.split(" ")[0] == "SELECT":
-           try:
-                cursor.execute(query)
-                data = cursor.fetchall()
-
-
-                if data:
-                    return data[0]
-                
-                
-                return False
-            
-
-            except Exception as e: 
-                print(e)
-                return {"Error"}
-
-
-        elif query.split(" ")[0] == "SELECT" and type == "all":
-
-
             try:
                 cursor.execute(query)
                 data = cursor.fetchall()
 
 
-                if data:
-                    return data[0]
-                
-                
-                return False
-            
-
-            except Exception as e: 
-                print(e)
-                return {"Error"}
-              
-              
-        elif query.split(" ")[0] == "SELECT" and type == "one":
-            try:
-                cursor.execute(query)
-                return  cursor.fetchone()
-
-              
-            except Exception as e:
-                print(e)
-                return {"Error"}
-        
-
-        elif query.split(" ")[0] == "UPDATE":
-                print(data)
-            
-            
                 if data:
                     return data
                 
                 
-                return {404}
-              
-              
-            except Exception as e:
+                return False
+            
+
+            except Exception as e: 
                 print(e)
                 return {"Error"}
+
+           
+
+        # elif query.split(" ")[0] == "SELECT" and type == "all":
+        #     try:
+        #         cursor.execute(query)
+        #         data = cursor.fetchall()
+
+
+        #         if data:
+        #             return data[0]
+                
+                
+        #         return False
+            
+
+        #     except Exception as e: 
+        #         print(e)
+        #         return {"Error"}
+              
+              
+        # elif query.split(" ")[0] == "SELECT" and type == "one":
+        #     try:
+        #         cursor.execute(query)
+        #         return  cursor.fetchone()
+
+              
+        #     except Exception as e:
+        #         print(e)
+        #         return {"Error"}
+        
+
+        # elif query.split(" ")[0] == "UPDATE":
+        #     try:
+        #         print(data)
+            
+            
+        #         if data:
+        #             return data
+                
+                
+        #         return {404}
+              
+              
+        #     except Exception as e:
+        #         print(e)
+        #         return {"Error"}
 
 
         elif query.split(" ")[0] == "UPDATE":
