@@ -3,9 +3,14 @@ import psycopg2
 
 def query(query: str):
     try:
-        conn = psycopg2.connect(database='geopark',
+        # conn = psycopg2.connect(database='geopark',
+        #                     user='postgres', 
+        #                     password='1',
+        #                     host='localhost', 
+        #                     port='5432')
+        conn = psycopg2.connect(database='test',
                             user='postgres', 
-                            password='1',
+                            password='G89811325f',
                             host='localhost', 
                             port='5432')
         cursor = conn.cursor()

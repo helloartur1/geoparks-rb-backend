@@ -1,18 +1,15 @@
 from datetime import datetime, timedelta
 from typing import Annotated, List
-
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Annotated
 from jose import jwt, JWTError
 import models
 import db_conn
-
-import psycopg2
 from config import DB_HOST, DB_PASS, DB_USER, DB_PORT, DB_NAME, PATH_PHOTO_GEOOBJECT
-
-from pydantic import UUID4, BaseModel
+from pydantic import UUID4
 import uuid
+
 
 conn_params = {
     "dbname": DB_NAME,
@@ -22,7 +19,9 @@ conn_params = {
     "port": DB_PORT
 }
 
+
 app = FastAPI()
+
 
 SECRET_KEY = "oPP6V7pbQsL5XYKI7HfXZQs2hp42fU96"
 ALGORITHM = "HS256"
@@ -95,15 +94,12 @@ def get_user_from_token(
 
 
 def get_active_user(user_from_token: Annotated[models.User, Depends(
-    get_user_from_token)]):  # ???получение активного пользователя??? По сути то же что и получение пользователя из токена
-    # if user_from_token.disabled:
-    #     raise HTTPException(status_code = 400, detail = "Inactive user")
-
+    get_user_from_token)]):  # получение пользователя (декоратор для user from token)
     return user_from_token
 
 
 def get_user_from_db(username: str,
-                     password: str):  # получение айдишника пользователя из бд ???для проверки наличия пользователя???
+                     password: str):  # получение айдишника пользователя из бд для проверки наличия пользователя
     id_query = f"SELECT id FROM users WHERE username = '{username}' and password = '{password}'"
     id_from_db = db_conn.query(id_query)[0][0]
 
@@ -113,7 +109,7 @@ def get_user_from_db(username: str,
     return False
 
 
-@app.get("/user", tags=['user'])
+@app.get("/user", tags=['user']) # TEST ROUTE
 async def test():
     q = f"SELECT * FROM users"
     return db_conn.query(q)
@@ -123,6 +119,7 @@ async def test():
 async def auth(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     user_from_db = get_user_from_db(form_data.username, form_data.password)
 
+
     if not user_from_db:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -130,12 +127,18 @@ async def auth(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
             headers={"WWW-Authenticate": "Bearer"}
         )
 
+
     user = get_user(form_data.username)
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
+
     token = create_jwt_token(
-        data={"sub": user["username"]}, expires_delta=access_token_expires
+        data = {"id": user["id"],
+                "sub": user["username"],
+                "role": user["role"]}, 
+        expires_delta=access_token_expires
     )
+
 
     return {"token": token}
 
@@ -279,12 +282,13 @@ async def get_all_geobjects():
 
 
 @app.post("/photo", tags=['photo'])
-async def add_photo_by_id_geoobject(geoobject_id: UUID4, path_photo: str, preview_photo: bool):
-    id = str(uuid.uuid4())
-    path_photo = "/geopark_image/" + path_photo
-    query = f"INSERT INTO photo(id,path,preview,geoobject_id) VALUES('{id}','{path_photo}','{preview_photo}','{geoobject_id}');"
+async def add_photo_by_id_geoobject(geoobject_id: UUID4, path_photo: str, preview_photo: bool, file: UploadFile):
+    # id = str(uuid.uuid4())
+    # path_photo = "/geopark_image/" + path_photo
+    # query = f"INSERT INTO photo(id,path,preview,geoobject_id) VALUES('{id}','{path_photo}','{preview_photo}','{geoobject_id}');"
 
-    return db_conn.query(query)
+    # return db_conn.query(query)
+    return file
 
 @app.get("/geoobject_detail/{id}", tags=['geoobject'], response_model=models.GeoobjectModelDetail)
 async def get_geoobject_and_photos(id: UUID4):
@@ -335,3 +339,100 @@ async def get_geoparks():
         description=str(row[4])
     ) for row in result]
     return res
+
+
+@app.put("/geoobject", tags=['geoobject'])
+async def update_geoobject(id: UUID4, new_data: models.UpdateGeoobjectModel, 
+                           current_user: Annotated[models.User, Depends(get_active_user)]):
+    if current_user and current_user["role"] == "admin":
+        update_query = f"UPDATE geoobject SET "
+
+
+        if new_data.name:
+            update_query += f"name = '{new_data.name}',"
+
+
+        elif new_data.description:
+            update_query += f"description = '{new_data.description}',"
+
+
+        elif new_data.longitude:
+            update_query += f"longitude = {new_data.longitude},"
+
+
+        elif new_data.latitude:
+            update_query += f"latitude = {new_data.latitude},"
+
+
+        elif new_data.type:
+            update_query += f"type = '{new_data.type}',"
+
+
+        elif new_data.geoparkId:
+            update_query += f"geoparkId = '{new_data.geoparkId}',"
+
+
+        else:
+            raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Fields are empty"
+        )
+
+        
+        update_query = update_query[:-1] + f" "
+        update_query = update_query + f"WHERE id = '{id}'"
+            
+        
+       # return update_query коммент не убирать
+        return db_conn.query(update_query)
+    
+    
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    
+
+@app.post("/geoobject", tags=['geoobject'])
+async def create_geoobject(new_geoobject: models.GeoobjectModel,
+                           current_user: Annotated[models.User, Depends(get_active_user)]):
+    if current_user and current_user["role"] == "admin":
+        if new_geoobject.name and new_geoobject.longitude and new_geoobject.latitude and new_geoobject.id and new_geoobject.type and new_geoobject.geoparkId:
+            create_query = f"INSERT INTO geoobject VALUES ('{new_geoobject.name}', '{new_geoobject.description}', {new_geoobject.longitude}, {new_geoobject.latitude}, '{new_geoobject.id}', '{new_geoobject.type}', '{new_geoobject.geoparkId}')"
+
+
+            return db_conn.query(create_query)
+        
+
+        else:
+            raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="some fields are empty"
+        )
+
+    
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    
+
+@app.delete("/geoobject", tags=['geoobject'])
+async def delete_geoobject(id: UUID4, current_user: Annotated[models.User, Depends(get_active_user)]):
+    if current_user and current_user["role"] == "admin":
+        delete_query = f"DELETE FROM geoobject WHERE id = '{id}'"
+
+
+        return db_conn.query(delete_query)
+    
+
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied",
+            headers={"WWW-Authenticate": "Bearer"}
+        )

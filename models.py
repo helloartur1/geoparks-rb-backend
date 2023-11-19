@@ -35,6 +35,7 @@ class GeoparkModel(BaseModel):
     latitude: float
     longitude: float
 
+
 class GeoobjectModel(BaseModel):
     id: UUID4
     name: str
@@ -43,6 +44,7 @@ class GeoobjectModel(BaseModel):
     latitude: float
     type: str
     geoparkId: str
+
 
 class GeoobjectModelDetail(BaseModel):
     id: UUID4
@@ -54,11 +56,22 @@ class GeoobjectModelDetail(BaseModel):
     geoparkId: str
     photoPaths: List[str]
 
+
 class PhotoModel(BaseModel):
     id: UUID4
     path: str
     geoobjectId: UUID4
     preview: bool
 
+
 class PathModel(BaseModel):
     path: str
+
+
+class UpdateGeoobjectModel(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    longitude: float | None = None
+    latitude: float | None = None
+    type: str | None = None
+    geoparkId: str | None = None
