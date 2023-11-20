@@ -5,11 +5,13 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Annotated
 from jose import jwt, JWTError
 from starlette.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 import models
 import db_conn
 from config import DB_HOST, DB_PASS, DB_USER, DB_PORT, DB_NAME, PATH_PHOTO_GEOOBJECT
 from pydantic import UUID4
+
 import uuid
 
 
@@ -23,6 +25,7 @@ conn_params = {
 
 
 app = FastAPI()
+app.mount("/geopark_image", StaticFiles(directory="geopark_image"), name="geopark_image")
 origins = [
     "http://localhost",
     "http://localhost:4200",
