@@ -4,6 +4,8 @@ from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Annotated
 from jose import jwt, JWTError
+from starlette.middleware.cors import CORSMiddleware
+
 import models
 import db_conn
 from config import DB_HOST, DB_PASS, DB_USER, DB_PORT, DB_NAME, PATH_PHOTO_GEOOBJECT
@@ -21,6 +23,17 @@ conn_params = {
 
 
 app = FastAPI()
+origins = [
+    "http://localhost",
+    "http://localhost:4200",
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 SECRET_KEY = "oPP6V7pbQsL5XYKI7HfXZQs2hp42fU96"
