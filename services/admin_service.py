@@ -16,9 +16,10 @@ router = APIRouter(
 
 
 @router.get("/") # TEST ROUTE
-async def test():
-    q = f"SELECT * FROM users"
-    return db_conn.query(q)
+async def test(current_user: Annotated[models.User, Depends(get_active_user)]):
+    if current_user and current_user["role"] == "admin":
+        q = f"SELECT * FROM users"
+        return db_conn.query(q)
 
 
 @router.get("/about_me", response_model=models.User)  # роут для проверки авторизации - выводит информацию о пользователе

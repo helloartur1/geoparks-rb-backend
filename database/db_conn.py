@@ -8,11 +8,11 @@ environ.Env.read_env('.env')
 
 def query(query: str):
     try:
-        conn = psycopg2.connect(database=env('database'),
-                            user=env('user'), 
-                            password=env('password'),
-                            host=env('host'), 
-                            port=env('port')
+        conn = psycopg2.connect(database=env('DB_NAME'),
+                            user=env('DB_USER'), 
+                            password=env('DB_PASS'),
+                            host=env('DB_HOST'), 
+                            port=env('DB_PORT')
         )
         cursor = conn.cursor()
 
