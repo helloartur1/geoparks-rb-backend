@@ -80,11 +80,12 @@ class SyncConn():
         
 
     @staticmethod
-    def select_routes_with_selectin_relationship():
+    def select_routes_with_selectin_relationship(user_id_from_service):
         with sync_session_factory() as session:
             query = (
                 select(routes)
                 .options(selectinload(routes.route_points))
+                .where(routes.user_id == user_id_from_service)
             )
 
             res = session.execute(query)

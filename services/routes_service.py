@@ -21,10 +21,10 @@ router = APIRouter(
 )
 
 
-@router.get("/")
-async def get_route(current_user: Annotated[models.User, Depends(get_active_user)]):
+@router.get("/{user_id}")
+async def get_route(user_id: int, current_user: Annotated[models.User, Depends(get_active_user)]):
     if current_user and current_user["role"] == "admin":
-        return SyncConn.select_routes_with_selectin_relationship()
+        return SyncConn.select_routes_with_selectin_relationship(user_id)
 
 
 @router.post("/")
