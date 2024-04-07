@@ -1,18 +1,19 @@
 import psycopg2
+import environ
+
+
+env = environ.Env()
+environ.Env.read_env('.env')
 
 
 def query(query: str):
     try:
-        # conn = psycopg2.connect(database='geopark',
-        #                     user='postgres', 
-        #                     password='1',
-        #                     host='localhost', 
-        #                     port='5432')
-        conn = psycopg2.connect(database='test',
-                            user='postgres', 
-                            password='G89811325f',
-                            host='localhost', 
-                            port='5432')
+        conn = psycopg2.connect(database=env('DB_NAME'),
+                            user=env('DB_USER'), 
+                            password=env('DB_PASS'),
+                            host=env('DB_HOST'), 
+                            port=env('DB_PORT')
+        )
         cursor = conn.cursor()
 
 
@@ -21,7 +22,6 @@ def query(query: str):
                 cursor.execute(query)
                 conn.commit()
                 return {"Succesfully created data"}
-
 
             except Exception as e:
                 print(e)
@@ -33,14 +33,11 @@ def query(query: str):
                 cursor.execute(query)
                 data = cursor.fetchall()
 
-
                 if data:
                     return data
                 
-                
                 return False
             
-
             except Exception as e: 
                 print(e)
                 return {"Error"}
@@ -52,7 +49,6 @@ def query(query: str):
                 conn.commit()
                 return {"Succesfully updated data"}
 
-
             except Exception as e:
                 print(e)
                 return {"Error"}
@@ -63,7 +59,6 @@ def query(query: str):
                 cursor.execute(query)
                 conn.commit()
                 return {"Successfully deleted data"}
-
 
             except Exception as e:
                 print(e)

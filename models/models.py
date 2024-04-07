@@ -75,3 +75,33 @@ class UpdateGeoobjectModel(BaseModel):
     latitude: float | None = None
     type: str | None = None
     geoparkId: str | None = None
+
+
+class routePointDTO(BaseModel):
+    id: UUID4
+    route_id: UUID4
+    order: int
+    name: str | None = None
+    longitude: float | None = None
+    latitude: float | None = None
+    geoobject_id: UUID4
+
+
+class routeDTO(BaseModel):
+    id: UUID4
+    name: str | None = None
+    description: str | None = None
+    user_id: int
+    route_points: list[routePointDTO]
+
+
+class routesDTO(BaseModel):
+    routes: list[routeDTO]
+
+
+class routePointsRelDTO(routePointDTO):
+    route: "routeDTO"
+
+
+class RouteRelDTO(routeDTO):
+    points: list["routePointDTO"]
