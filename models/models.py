@@ -77,6 +77,7 @@ class UpdateGeoobjectModel(BaseModel):
     geoparkId: str | None = None
 
 
+#для selectin relationship
 class routePointDTO(BaseModel):
     id: UUID4
     route_id: UUID4
@@ -105,3 +106,46 @@ class routePointsRelDTO(routePointDTO):
 
 class RouteRelDTO(routeDTO):
     points: list["routePointDTO"]
+#для selectin relationship
+    
+
+class routePointPost(BaseModel):
+    id: UUID4
+    route_id: UUID4
+    order: int
+    name: str | None = None
+    longitude: float | None = None
+    latitude: float | None = None
+    geoobject_id: UUID4
+
+
+class routePost(BaseModel):
+    id: UUID4
+    name: str | None = None
+    description: str | None = None
+    user_id: int
+
+
+class routesAndPointsPost(BaseModel):
+    route: routePost | None = None
+    points: list[routePointPost] | None = None
+
+
+#временно, к обсуждению
+class routeChangeModel(BaseModel):
+    id: UUID4
+    name: str | None = None
+    description: str | None = None
+    user_id: int | None = None
+    
+    __hash__ = object.__hash__
+
+
+class pointsChangeModel(BaseModel):
+    id: UUID4
+    order: int | None = None
+
+
+class routeAndPointsChangeModel(BaseModel):
+    route: routeChangeModel | None = None
+    points: list[pointsChangeModel] | None = None

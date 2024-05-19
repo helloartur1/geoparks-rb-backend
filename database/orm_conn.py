@@ -9,15 +9,34 @@ import asyncio
 class SyncConn():
 
 
-    @staticmethod
-    def create_table():
-        Base.metadata.drop_all(sync_engine)
-        sync_engine.echo = False
-        Base.metadata.create_all(sync_engine)
-        sync_engine.echo = False
+    # @staticmethod
+    # def create_table():
+    #     Base.metadata.drop_all(sync_engine)
+    #     sync_engine.echo = False
+    #     Base.metadata.create_all(sync_engine)
+    #     sync_engine.echo = False
 
 
     @staticmethod
+    def insert_route_into_routes(route):
+        with sync_session_factory() as session:
+            insert_route = insert(routes).values(id=route.id,
+                                                 name=route.name,
+                                                 description=route.description,
+                                                 user_id=route.user_id)
+            session.execute(insert_route)
+            session.commit()
+
+
+    @staticmethod
+    def insert_points_into_points(points):
+        with sync_session_factory() as session:
+            insert_points = insert(route_points).values(points)
+            session.execute(insert_points)
+            session.commit()
+
+
+    '''@staticmethod
     def insert_data_into_routes_and_points():
         with sync_session_factory() as session:
             routes_v = [
@@ -76,11 +95,11 @@ class SyncConn():
             insert_points = insert(route_points).values(points)
             session.execute(insert_routes)
             session.execute(insert_points)
-            session.commit()
+            session.commit()'''
         
 
     @staticmethod
-    def select_routes_with_selectin_relationship(user_id_from_service):
+    def select_routes_with_selectin_relationship_for_user(user_id_from_service):
         with sync_session_factory() as session:
             query = (
                 select(routes)
@@ -94,6 +113,94 @@ class SyncConn():
             result_dto = [routeDTO.model_validate(row, from_attributes=True) for row in result_orm]
             print(f"{result_dto=}")
             return result_dto
+        
+
+    @staticmethod
+    def select_routes_with_selectin_relationship():
+        with sync_session_factory() as session:
+            query = (
+                select(routes)
+                .options(selectinload(routes.route_points))
+            )
+
+            res = session.execute(query)
+            result_orm = res.scalars().all()
+            print(f"{result_orm=}")
+            result_dto = [routeDTO.model_validate(row, from_attributes=True) for row in result_orm]
+            print(f"{result_dto=}")
+            return result_dto
+        
+
+    @staticmethod
+    def update_route_name(route):
+        with sync_session_factory() as session:
+            stmt = (
+                update(routes)
+                .where(routes.id == route.id)
+                .values(name=route.name)
+            )
+            session.execute(stmt)
+            session.commit()
+
+
+    @staticmethod
+    def update_route_description(route):
+        with sync_session_factory() as session:
+            stmt = (
+                update(routes)
+                .where(routes.id == route.id)
+                .values(description=route.description)
+            )
+            session.execute(stmt)
+            session.commit()
+
+
+    @staticmethod
+    def update_route_user_id(route):
+        with sync_session_factory() as session:
+            stmt = (
+                update(routes)
+                .where(routes.id == route.id)
+                .values(user_id=route.user_id)
+            )
+            session.execute(stmt)
+            session.commit()
+
+
+
+    @staticmethod
+    def update_points_order(points):
+        with sync_session_factory() as session:
+            for point in points:
+                stmt = (
+                    update(route_points)
+                    .where(route_points.id == point["id"])
+                    .values(order=point["order"])
+                )
+                session.execute(stmt)
+                session.commit()
+
+
+    @staticmethod
+    def delete_route(id):
+        with sync_session_factory() as session:
+            stmt = (
+                delete(routes)
+                .where(routes.id == id)
+            )
+            session.execute(stmt)
+            session.commit()
+
+
+    @staticmethod
+    def delete_route_points(id):
+        with sync_session_factory() as session:
+            stmt = (
+                delete(route_points)
+                .where(route_points.route_id == id)
+            )
+            session.execute(stmt)
+            session.commit()
 
 
 # SyncConn.create_table()

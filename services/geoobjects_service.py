@@ -38,19 +38,25 @@ async def get_all_geobjects():
 async def get_geoobject(id: UUID4):
     query = f"SELECT * FROM geoobject  WHERE id = '{id}'"
     result = db_conn.query(query)
-    result = result[0]
-
-    res =  models.GeoobjectModel(
-        name=str(result[0]),
-        description=str(result[1]),
-        longitude=float(result[2]),
-        latitude=float(result[3]),
-        id=str(result[4]),
-        type=str(result[5]),
-        geoparkId=str(result[6])
-    )
+    if result:
+        result = result[0]
+        res =  models.GeoobjectModel(
+            name=str(result[0]),
+            description=str(result[1]),
+            longitude=float(result[2]),
+            latitude=float(result[3]),
+            id=str(result[4]),
+            type=str(result[5]),
+            geoparkId=str(result[6])
+        )
+        
+        return res
     
-    return res
+    else:
+            raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="The requested penalty has been removed from the server and there is no redirect."
+        )
 
 
 @router.get("/detail/{id}", response_model=models.GeoobjectModelDetail)
@@ -128,22 +134,22 @@ async def update_geoobject(id: UUID4, new_data: models.UpdateGeoobjectModel,
         if new_data.name:
             update_query += f"name = '{new_data.name}',"
 
-        elif new_data.description:
+        if new_data.description:
             update_query += f"description = '{new_data.description}',"
 
-        elif new_data.longitude:
+        if new_data.longitude:
             update_query += f"longitude = {new_data.longitude},"
 
-        elif new_data.latitude:
+        if new_data.latitude:
             update_query += f"latitude = {new_data.latitude},"
 
-        elif new_data.type:
+        if new_data.type:
             update_query += f"type = '{new_data.type}',"
 
-        elif new_data.geoparkId:
+        if new_data.geoparkId:
             update_query += f"geoparkId = '{new_data.geoparkId}',"
 
-        else:
+        if not new_data:
             raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Fields are empty"
