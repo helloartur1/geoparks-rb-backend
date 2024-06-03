@@ -1,7 +1,7 @@
 from sqlalchemy import text, insert, select, update, delete 
 from sqlalchemy.orm import selectinload
-from .orm_database import sync_engine, sync_session_factory, Base
-from .orm_models import route_points, routes
+from database.config.orm_database import sync_engine, sync_session_factory, Base
+from database.config.orm_models import route_points, routes
 from models.models import routeDTO
 import asyncio
 
@@ -18,12 +18,12 @@ class SyncConn():
 
 
     @staticmethod
-    def insert_route_into_routes(route):
+    def insert_route_into_routes(route_id, route, user_id):
         with sync_session_factory() as session:
-            insert_route = insert(routes).values(id=route.id,
+            insert_route = insert(routes).values(id=route_id,
                                                  name=route.name,
                                                  description=route.description,
-                                                 user_id=route.user_id)
+                                                 user_id=user_id)
             session.execute(insert_route)
             session.commit()
 
@@ -31,8 +31,11 @@ class SyncConn():
     @staticmethod
     def insert_points_into_points(points):
         with sync_session_factory() as session:
-            insert_points = insert(route_points).values(points)
-            session.execute(insert_points)
+            stmt = (
+                insert(route_points)
+                .values(points)
+            )
+            session.execute(stmt)
             session.commit()
 
 
@@ -57,7 +60,6 @@ class SyncConn():
                 {
                     "id": "96f23f47-cc34-45ce-bde8-334367263647",
                     "order": 1,
-                    "name": "test",
                     "longitude": 33.23,
                     "latitude": 55.55,
                     "geoobject_id": "44a04716-906a-4970-bea2-7a43414dc320",
@@ -66,7 +68,6 @@ class SyncConn():
                 {
                     "id": "96f23f47-cc34-45ce-bde8-334367263648",
                     "order": 2,
-                    "name": "test2",
                     "longitude": 43.23,
                     "latitude": 45.55,
                     "geoobject_id": "44a04716-906a-4970-bea2-7a43414dc321",
@@ -75,7 +76,6 @@ class SyncConn():
                 {
                     "id": "96f23f47-cc34-45ce-bde8-334367263645",
                     "order": 1,
-                    "name": "test",
                     "longitude": 23.23,
                     "latitude": 25.55,
                     "geoobject_id": "44a04716-906a-4970-bea2-7a43414dc322",
@@ -84,7 +84,6 @@ class SyncConn():
                 {
                     "id": "96f23f47-cc34-45ce-bde8-334367263646",
                     "order": 2,
-                    "name": "test2",
                     "longitude": 63.23,
                     "latitude": 65.55,
                     "geoobject_id": "44a04716-906a-4970-bea2-7a43414dc323",
@@ -109,9 +108,7 @@ class SyncConn():
 
             res = session.execute(query)
             result_orm = res.scalars().all()
-            print(f"{result_orm=}")
             result_dto = [routeDTO.model_validate(row, from_attributes=True) for row in result_orm]
-            print(f"{result_dto=}")
             return result_dto
         
 
@@ -132,11 +129,11 @@ class SyncConn():
         
 
     @staticmethod
-    def update_route_name(route):
+    def update_route_name(route, user_id):
         with sync_session_factory() as session:
             stmt = (
                 update(routes)
-                .where(routes.id == route.id)
+                .where(routes.user_id == user_id)
                 .values(name=route.name)
             )
             session.execute(stmt)
@@ -144,41 +141,26 @@ class SyncConn():
 
 
     @staticmethod
-    def update_route_description(route):
+    def update_route_description(route, user_id):
         with sync_session_factory() as session:
             stmt = (
                 update(routes)
-                .where(routes.id == route.id)
+                .where(routes.user_id == user_id)
                 .values(description=route.description)
             )
             session.execute(stmt)
             session.commit()
-
+            
 
     @staticmethod
-    def update_route_user_id(route):
+    def delete_points_by_route_id(route_id):
         with sync_session_factory() as session:
             stmt = (
-                update(routes)
-                .where(routes.id == route.id)
-                .values(user_id=route.user_id)
+                delete(route_points)
+                .where(route_points.route_id == route_id)
             )
             session.execute(stmt)
             session.commit()
-
-
-
-    @staticmethod
-    def update_points_order(points):
-        with sync_session_factory() as session:
-            for point in points:
-                stmt = (
-                    update(route_points)
-                    .where(route_points.id == point["id"])
-                    .values(order=point["order"])
-                )
-                session.execute(stmt)
-                session.commit()
 
 
     @staticmethod
@@ -201,6 +183,42 @@ class SyncConn():
             )
             session.execute(stmt)
             session.commit()
+
+
+    @staticmethod
+    def select_route_id_from_user_id(user_id):
+        with sync_session_factory() as session:
+            query = (
+                select(routes.id)
+                .where(routes.user_id == user_id)
+            )
+            res = session.execute(query).first()
+
+            if res:
+                route_id = res[0]
+                return route_id
+            else:
+                return None
+            
+
+    @staticmethod
+    def select_route_from_route_id_and_user_id(route_id, user_id):
+        with sync_session_factory() as session:
+            query = (
+                select(routes)
+                .where(routes.id == route_id)
+                .where(routes.user_id == user_id)
+                .options(selectinload(routes.route_points))
+            )
+            res = session.execute(query)
+            if res:
+                result_orm = res.scalars().all()
+                result_dto = [routeDTO.model_validate(row, from_attributes=True) for row in result_orm]
+                return result_dto
+            else:
+                return False
+
+
 
 
 # SyncConn.create_table()
