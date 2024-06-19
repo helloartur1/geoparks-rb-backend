@@ -1,5 +1,14 @@
 from fastapi import FastAPI
-from services import admin_service, auth_service, geoobjects_service, geoparks_service, photo_service, routes_service
+from auth.auth_services import admin_service, auth_service
+from services import (
+    geoobjects_service, 
+    geoparks_service, 
+    photo_service, 
+    routes_service
+)
+from auth.auth_services import (
+    user_service
+)
 
 
 from fastapi.staticfiles import StaticFiles
@@ -21,7 +30,6 @@ app.add_middleware(
 )
 
 
-# app.mount("/geopark_image", StaticFiles(directory="geopark_image"), name="geopark_image")
 # origins = [
 #     "http://localhost",
 #     "http://localhost:4200",
@@ -35,8 +43,9 @@ app.add_middleware(
 # )
 
 
-app.include_router(admin_service.router)
 app.include_router(auth_service.router)
+app.include_router(admin_service.router)
+app.include_router(user_service.router)
 app.include_router(geoobjects_service.router)
 app.include_router(geoparks_service.router)
 app.include_router(photo_service.router)

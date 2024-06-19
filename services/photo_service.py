@@ -1,13 +1,18 @@
+from fastapi import (
+    Depends, 
+    HTTPException, 
+    status, 
+    UploadFile
+)
 from fastapi import APIRouter
 from typing import Annotated
-from fastapi import Depends, HTTPException, status, UploadFile
 from pydantic import UUID4
-
-from database import db_conn
+from database.methods.photo_methods import SyncConn
 from models import models
-from jwt.token_func import get_active_user
-
+from auth.auth_func.validate_func import get_current_active_auth_user
 import environ
+import uuid
+import os
 
 
 env = environ.Env()
@@ -23,59 +28,121 @@ router = APIRouter(
 )
 
 
-@router.get("/geoobject/{geoobject_id}")
+@router.get("/{geoobject_id}")
 async def photos_by_geoobject(geoobject_id: UUID4):
-    query = f"SELECT photo.* FROM photo WHERE geoobject_id = '{geoobject_id}'"
-    result = db_conn.query(query)
-
-    res = [models.PhotoModel(
-            path=str(row[0]),
-            id=str(row[2]),
-            geoobjectId=str(row[1]),
-            preview=bool(row[3])) 
-        
-        for row in result
-    ]
-
-    return res
+    return SyncConn.select_photo_by_geoobject_id(geoobject_id)
 
 
 @router.post("/")
-async def add_photo_by_id_geoobject(geoobject_id: UUID4, path_photo: str, preview_photo: bool, file: UploadFile):
-    # id = str(uuid.uuid4())
-    # path_photo = "/geopark_image/" + path_photo
-    # query = f"INSERT INTO photo(id,path,preview,geoobject_id) VALUES('{id}','{path_photo}','{preview_photo}','{geoobject_id}');"
+async def add_photo(
+    geoobject_id: UUID4, 
+    preview: bool, 
+    current_user: Annotated[models.UserDTO, Depends(get_current_active_auth_user)],
+    file: list[UploadFile]
+):
+    if current_user.role == "admin":
+        if file:
+            for photo in file:
+                if photo.content_type == "image/jpeg" or photo.content_type == "image/png":
+                    id = uuid.uuid4()
+                    path = PATH_PHOTO_GEOOBJECT + '\\\\' + photo.filename
 
-    # return db_conn.query(query)
-    return file
+                    SyncConn.insert_photo(id, path, geoobject_id, preview, photo.filename)
 
+                    contents = await photo.read()
+                    with open(f"{path}", "wb") as f:
+                        f.write(contents)
 
-@router.put("/")  # роут для изменения фотки в БД
-async def change_photo(pictures_name: models.ChangePictures,
-                       current_user: Annotated[models.User, Depends(get_active_user)]):
-    if current_user and current_user["role"] == "admin":
-        old_name = pictures_name.old_name
-        new_name = pictures_name.new_name
-        query_for_change = f"UPDATE photo SET path = '{PATH_PHOTO_GEOOBJECT}\{new_name}.jpg' WHERE path like '%\{old_name}.jpg%'"
-
-        return db_conn.query(query_for_change)
-    
+                else:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Bad type of photograph"
+                    )
+            
+            raise HTTPException(
+                status_code=status.HTTP_200_OK,
+                detail="Successfully added"
+            )
+        
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Bad type of photograph"
+        )
+        
     else:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied",
             headers={"WWW-Authenticate": "Bearer"}
         )
-    
 
-@router.delete("/")  # роут для удаления фотки
-async def delete_photo(picture_name: models.DeletePicture,
-                       current_user: Annotated[models.User, Depends(get_active_user)]):
-    if current_user and current_user["role"] == "admin":
-        delete_picture = picture_name.picture_name
-        query_for_delete = f"DELETE FROM photo WHERE path = '{PATH_PHOTO_GEOOBJECT}\{delete_picture}.jpg'"
 
-        return db_conn.query(query_for_delete)
+@router.put("/") 
+async def change_photo(
+    current_user: Annotated[models.UserDTO, Depends(get_current_active_auth_user)],
+    old_photo: str, # image.jpg | image.img
+    file: UploadFile
+):
+    if current_user.role == "admin":
+        new_photo = file.filename
+        path_to_old_photo = PATH_PHOTO_GEOOBJECT + '\\\\' + old_photo
+        path_to_new_photo = PATH_PHOTO_GEOOBJECT + '\\\\' + new_photo
+
+        if SyncConn.select_photo_by_name(old_photo):
+            os.remove(path_to_old_photo)
+
+            contents = await file.read()
+            with open(f"{path_to_new_photo}", "wb") as f:
+                f.write(contents)
+
+            SyncConn.update_photo_path(path_to_old_photo, path_to_new_photo, new_photo)
+
+            raise HTTPException(
+                status_code=status.HTTP_200_OK,
+                detail="Successfully updated"
+            )
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Bad name old photograph"
+        )
+
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+
+@router.delete("/")
+async def delete_photo(
+    photo_name: str,
+    current_user: Annotated[models.UserDTO, Depends(get_current_active_auth_user)]
+):
+    if current_user.role == "admin":
+        path_to_photo = PATH_PHOTO_GEOOBJECT + '\\\\' + photo_name
+
+        if SyncConn.select_photo_by_name(photo_name):
+            if os.path.exists(path_to_photo):
+                os.remove(path_to_photo)
+                SyncConn.delete_photo(photo_name)
+
+                raise HTTPException(
+                    status_code=status.HTTP_200_OK,
+                    detail="Successfully deleted"
+                )
+            
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="File not exist"
+                )
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Bad name old photograph"
+        )
 
     else:
         raise HTTPException(
