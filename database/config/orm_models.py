@@ -50,7 +50,7 @@ class geoobject(Base):
     id: Mapped[uidpk]
     name: Mapped[str]
     type: Mapped[str]
-    common_type: Mapped[str]
+    commonType: Mapped[str]
     latitude: Mapped[float]
     longitude: Mapped[float]
     geopark_id: Mapped[UUID4] = mapped_column(ForeignKey("geoparks.id"))

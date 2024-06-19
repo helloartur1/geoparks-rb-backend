@@ -68,8 +68,8 @@ async def update_geoobject(id: UUID4, new_data: models.UpdateGeoobjectModel,
             if new_data.type:
                 SyncConn.update_geoobject_type(id, new_data.type)
 
-            if new_data.common_type:
-                SyncConn.update_geoobject_common_type(id, new_data.common_type)
+            if new_data.commonType:
+                SyncConn.update_geoobject_commonType(id, new_data.commonType)
 
             if new_data.longitude:
                 SyncConn.update_geoobject_longitude(id, new_data.longitude)

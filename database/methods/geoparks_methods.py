@@ -18,3 +18,17 @@ class SyncConn():
             result_dto = [GeoparkModel.model_validate(row, from_attributes=True) for row in result_orm]
 
             return result_dto
+
+
+    @staticmethod
+    def select_geopark_by_id(geopark_id):
+        with sync_session_factory() as session:
+            query = (
+                select(geopark)
+                .where(geopark.id == geopark_id)
+            )
+            res = session.execute(query)
+            result_orm = res.scalars().first()
+            result_dto = GeoparkModel.model_validate(result_orm, from_attributes=True)
+
+            return result_dto
