@@ -18,7 +18,6 @@ from starlette.middleware.cors import CORSMiddleware
 app = FastAPI()
 
 
-# app.mount("/geopark_image", StaticFiles(directory="geopark_image"), name="geopark_image")
 # origins = [
 #     "http://localhost",
 #     "http://localhost:4200",
@@ -32,8 +31,6 @@ app = FastAPI()
 # )
 
 
-# app.include_router(admin_service.router)
-# app.include_router(auth_service.router)
 app.include_router(auth_service.router)
 app.include_router(admin_service.router)
 app.include_router(user_service.router)

@@ -44,10 +44,10 @@ class LoginResponce(BaseModel):
 class GeoparkModel(BaseModel):
     id: UUID4
     name: str
-    description: str
+    description: str | None = None
     latitude: float
     longitude: float
-    layer_link: str
+    layer_link: str | None = None
 
 
 class GeoobjectModel(BaseModel):

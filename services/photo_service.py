@@ -43,7 +43,7 @@ async def add_photo(
     if current_user.role == "admin":
         if file:
             for photo in file:
-                if photo.content_type == "image/jpeg":
+                if photo.content_type == "image/jpeg" or photo.content_type == "image/png":
                     id = uuid.uuid4()
                     path = PATH_PHOTO_GEOOBJECT + '\\\\' + photo.filename
 
