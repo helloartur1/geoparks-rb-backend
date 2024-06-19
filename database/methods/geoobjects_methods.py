@@ -78,7 +78,7 @@ class SyncConn():
                     id=geoobject_id,
                     name=new_geoobject.name,
                     type=new_geoobject.type,
-                    common_type=new_geoobject.common_type,
+                    commonType=new_geoobject.commonType,
                     latitude=new_geoobject.latitude,
                     longitude=new_geoobject.longitude,
                     geopark_id=new_geoobject.geopark_id,

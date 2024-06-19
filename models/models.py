@@ -54,7 +54,7 @@ class GeoobjectModel(BaseModel):
     id: UUID4
     name: str
     type: str
-    common_type: str
+    commonType: str
     latitude: float
     longitude: float
     geopark_id: UUID4
@@ -73,7 +73,7 @@ class GeoobjectModelDTO(BaseModel):
     id: UUID4
     name: str
     type: str
-    common_type: str
+    commonType: str
     latitude: float
     longitude: float
     geopark_id: UUID4
@@ -99,7 +99,7 @@ class PathModel(BaseModel):
 class InsertGeoobjectModel(BaseModel):
     name: str
     type: str
-    common_type: str
+    commonType: str
     latitude: float
     longitude: float
     geopark_id: UUID4
@@ -109,7 +109,7 @@ class InsertGeoobjectModel(BaseModel):
 class UpdateGeoobjectModel(BaseModel):
     name: str | None = None
     type: str | None = None
-    common_type: str | None = None
+    commonType: str | None = None
     latitude: float | None = None
     longitude: float | None = None
     geopark_id: UUID4 | None = None
