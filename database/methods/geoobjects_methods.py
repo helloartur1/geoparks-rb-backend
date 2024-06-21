@@ -118,7 +118,7 @@ class SyncConn():
             stmt = (
                 update(geoobject)
                 .where(geoobject.id == id)
-                .values(common_type=common_type)
+                .values(commonType=common_type)
             )
             session.execute(stmt)
             session.commit()

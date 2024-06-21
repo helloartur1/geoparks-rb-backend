@@ -16,7 +16,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 
 app = FastAPI()
-app.mount("/geopark_image", StaticFiles(directory="geopark_image"), name="geopark_image")
+app.mount("/Pictures", StaticFiles(directory="Pictures"), name="Pictures")
 origins = [
     "http://localhost",
     "http://localhost:4200",

@@ -16,6 +16,8 @@ class UserDTO(BaseModel):
     role: str
     is_active: bool
 
+class CreateGeoobjectResponse(BaseModel):
+    id: UUID4
 
 class TokenInfo(BaseModel):
     access_token: str

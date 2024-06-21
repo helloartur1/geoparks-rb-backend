@@ -7,6 +7,7 @@ from models import models
 from auth.auth_func.validate_func import get_current_active_auth_user
 import uuid
 
+from models.models import CreateGeoobjectResponse
 
 router = APIRouter(
     prefix="/geoobject",
@@ -43,11 +44,8 @@ async def create_geoobject(
     if current_user.role == "admin":
         geoobject_id = uuid.uuid4()
         SyncConn.insert_into_geoobject(geoobject_id, new_geoobject) #только если в связанной таблице есть геопарк, на который ссылается геообъект
+        return CreateGeoobjectResponse(id=geoobject_id)
 
-        raise HTTPException(
-                status_code=status.HTTP_200_OK,
-                detail="Successfully created"
-            )
 
     else:
         raise HTTPException(
@@ -69,7 +67,7 @@ async def update_geoobject(id: UUID4, new_data: models.UpdateGeoobjectModel,
                 SyncConn.update_geoobject_type(id, new_data.type)
 
             if new_data.commonType:
-                SyncConn.update_geoobject_commonType(id, new_data.commonType)
+                SyncConn.update_geoobject_common_type(id, new_data.commonType)
 
             if new_data.longitude:
                 SyncConn.update_geoobject_longitude(id, new_data.longitude)
