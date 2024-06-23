@@ -9,14 +9,20 @@ from services import (
 from auth.auth_services import (
     user_service
 )
-
-
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
+import environ
+
+
+env = environ.Env()
+environ.Env.read_env('.env')
+
+
+FOLDER = env('PHOTO_FOLDER', str)
 
 
 app = FastAPI()
-app.mount("/Pictures", StaticFiles(directory="Pictures"), name="Pictures")
+app.mount("/" + FOLDER, StaticFiles(directory=FOLDER), name=FOLDER)
 origins = [
     "http://localhost",
     "http://localhost:4200",
