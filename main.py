@@ -30,6 +30,7 @@ app.add_middleware(
 )
 
 
+# app.mount(path: "/Pictures" StaticFiles(directory="Pictures"), name="Pictures")
 # origins = [
 #     "http://localhost",
 #     "http://localhost:4200",

@@ -20,6 +20,7 @@ environ.Env.read_env('.env')
 
 
 PATH_PHOTO_GEOOBJECT = env('PATH_PHOTO_GEOOBJECT', str)
+PHOTO_FOLDER = env('PHOTO_FOLDER', str)
 
 
 router = APIRouter(
@@ -46,8 +47,9 @@ async def add_photo(
                 if photo.content_type == "image/jpeg" or photo.content_type == "image/png":
                     id = uuid.uuid4()
                     path = PATH_PHOTO_GEOOBJECT + '\\\\' + photo.filename
+                    valid_path_to_photo = PHOTO_FOLDER + '/' + photo.filename
 
-                    SyncConn.insert_photo(id, path, geoobject_id, preview, photo.filename)
+                    SyncConn.insert_photo(id, valid_path_to_photo, geoobject_id, preview, photo.filename)
 
                     contents = await photo.read()
                     with open(f"{path}", "wb") as f:
@@ -87,6 +89,8 @@ async def change_photo(
         new_photo = file.filename
         path_to_old_photo = PATH_PHOTO_GEOOBJECT + '\\\\' + old_photo
         path_to_new_photo = PATH_PHOTO_GEOOBJECT + '\\\\' + new_photo
+        valid_path_to_old_photo = PHOTO_FOLDER + '/' + old_photo
+        valid_path_to_new_photo = PHOTO_FOLDER + '/' + new_photo
 
         if SyncConn.select_photo_by_name(old_photo):
             os.remove(path_to_old_photo)
@@ -95,7 +99,7 @@ async def change_photo(
             with open(f"{path_to_new_photo}", "wb") as f:
                 f.write(contents)
 
-            SyncConn.update_photo_path(path_to_old_photo, path_to_new_photo, new_photo)
+            SyncConn.update_photo_path(valid_path_to_old_photo, valid_path_to_new_photo, new_photo)
 
             raise HTTPException(
                 status_code=status.HTTP_200_OK,
