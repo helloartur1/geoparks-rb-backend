@@ -106,10 +106,19 @@ async def put_route(
                 json_compatible_route_data = route_change.route
 
                 if json_compatible_route_data.name:
-                    SyncConn.update_route_name(json_compatible_route_data, current_user.id)
+                    SyncConn.update_route_name(json_compatible_route_data, current_user.id, route_id)
                 
                 if json_compatible_route_data.description:
-                    SyncConn.update_route_description(json_compatible_route_data, current_user.id)
+                    SyncConn.update_route_description(json_compatible_route_data, current_user.id, route_id)
+
+                if json_compatible_route_data.profile:
+                    SyncConn.update_route_profile(json_compatible_route_data, current_user.id, route_id)
+
+                if json_compatible_route_data.start_latitude:
+                    SyncConn.update_route_start_latitude(json_compatible_route_data, current_user.id, route_id)
+
+                if json_compatible_route_data.start_longitude:
+                    SyncConn.update_route_start_longitude(json_compatible_route_data, current_user.id, route_id)
 
             if route_change.points: #к обсуждению
                 points = route_change.points

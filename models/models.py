@@ -125,7 +125,7 @@ class routePointDTO(BaseModel):
     order: int
     longitude: float | None = None
     latitude: float | None = None
-    geoobject_id: UUID4
+    geoobject_id: UUID4 | None = None
 
 
 class routeDTO(BaseModel):
@@ -133,6 +133,9 @@ class routeDTO(BaseModel):
     name: str | None = None
     description: str | None = None
     user_id: UUID4
+    profile: str | None = None
+    start_latitude: float | None = None
+    start_longitude: float | None = None
     route_points: list[routePointDTO]
 
 
@@ -153,12 +156,15 @@ class routePointPost(BaseModel):
     order: int
     longitude: float
     latitude: float
-    geoobject_id: UUID4
+    geoobject_id: UUID4 | None = None
 
 
 class routePost(BaseModel):
     name: str 
     description: str | None = None
+    profile: str | None = None
+    start_latitude: float | None = None
+    start_longitude: float | None = None
 
 
 class routeAndPoints(BaseModel):
@@ -170,6 +176,9 @@ class routeAndPoints(BaseModel):
 class routeChangeModel(BaseModel):
     name: str | None = None
     description: str | None = None
+    profile: str | None = None
+    start_latitude: float | None = None
+    start_longitude: float | None = None
     
     __hash__ = object.__hash__
 
@@ -178,7 +187,7 @@ class pointsChangeModel(BaseModel):
     order: int
     longitude: float
     latitude: float
-    geoobject_id: UUID4
+    geoobject_id: UUID4 | None = None
 
 
 class routeAndPointsChangeModel(BaseModel):

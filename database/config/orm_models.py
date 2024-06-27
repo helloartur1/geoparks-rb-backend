@@ -94,7 +94,7 @@ class route_points(Base):
     order: Mapped[int]
     longitude: Mapped[float]
     latitude: Mapped[float]
-    geoobject_id: Mapped[UUID4]
+    geoobject_id: Mapped[UUID4 | None]
     
     route: Mapped["routes"] = relationship(
         back_populates="route_points"
@@ -108,7 +108,9 @@ class routes(Base):
     name: Mapped[str]
     description: Mapped[str | None]
     user_id: Mapped[UUID4]
-    
+    profile: Mapped[str | None]
+    start_latitude: Mapped[float | None]
+    start_longitude: Mapped[float | None]    
     route_points: Mapped[list["route_points"]] = relationship(
         back_populates="route"
     )

@@ -36,20 +36,6 @@ app.add_middleware(
 )
 
 
-# app.mount(path: "/Pictures" StaticFiles(directory="Pictures"), name="Pictures")
-# origins = [
-#     "http://localhost",
-#     "http://localhost:4200",
-# ]
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=origins,
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
-
-
 app.include_router(auth_service.router)
 app.include_router(admin_service.router)
 app.include_router(user_service.router)

@@ -23,7 +23,10 @@ class SyncConn():
             insert_route = insert(routes).values(id=route_id,
                                                  name=route.name,
                                                  description=route.description,
-                                                 user_id=user_id)
+                                                 user_id=user_id,
+                                                 profile=route.profile,
+                                                 start_latitude=route.start_latitude,
+                                                 start_longitude=route.start_longitude)
             session.execute(insert_route)
             session.commit()
 
@@ -129,11 +132,13 @@ class SyncConn():
         
 
     @staticmethod
-    def update_route_name(route, user_id):
+    def update_route_name(route, user_id, route_id):
         with sync_session_factory() as session:
             stmt = (
                 update(routes)
-                .where(routes.user_id == user_id)
+                .where(
+                    routes.user_id == user_id,
+                    routes.id == route_id)
                 .values(name=route.name)
             )
             session.execute(stmt)
@@ -141,12 +146,56 @@ class SyncConn():
 
 
     @staticmethod
-    def update_route_description(route, user_id):
+    def update_route_description(route, user_id, route_id):
         with sync_session_factory() as session:
             stmt = (
                 update(routes)
-                .where(routes.user_id == user_id)
+                .where(
+                    routes.user_id == user_id,
+                    routes.id == route_id)
                 .values(description=route.description)
+            )
+            session.execute(stmt)
+            session.commit()
+
+
+    @staticmethod
+    def update_route_profile(route, user_id, route_id):
+        with sync_session_factory() as session:
+            stmt = (
+                update(routes)
+                .where(
+                    routes.user_id == user_id,
+                    routes.id == route_id)
+                .values(profile=route.profile)
+            )
+            session.execute(stmt)
+            session.commit()
+
+        
+    @staticmethod
+    def update_route_start_latitude(route, user_id, route_id):
+        with sync_session_factory() as session:
+            stmt = (
+                update(routes)
+                .where(
+                    routes.user_id == user_id,
+                    routes.id == route_id)
+                .values(start_latitude=route.start_latitude)
+            )
+            session.execute(stmt)
+            session.commit()
+
+
+    @staticmethod
+    def update_route_start_longitude(route, user_id, route_id):
+        with sync_session_factory() as session:
+            stmt = (
+                update(routes)
+                .where(
+                    routes.user_id == user_id,
+                    routes.id == route_id)
+                .values(start_longitude=route.start_longitude)
             )
             session.execute(stmt)
             session.commit()

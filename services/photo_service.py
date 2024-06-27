@@ -87,8 +87,8 @@ async def change_photo(
 ):
     if current_user.role == "admin":
         new_photo = file.filename
-        path_to_old_photo = PATH_PHOTO_GEOOBJECT + '\\\\' + old_photo
-        path_to_new_photo = PATH_PHOTO_GEOOBJECT + '\\\\' + new_photo
+        path_to_old_photo = PATH_PHOTO_GEOOBJECT + '\\' + old_photo
+        path_to_new_photo = PATH_PHOTO_GEOOBJECT + '\\' + new_photo
         valid_path_to_old_photo = PHOTO_FOLDER + '/' + old_photo
         valid_path_to_new_photo = PHOTO_FOLDER + '/' + new_photo
 
