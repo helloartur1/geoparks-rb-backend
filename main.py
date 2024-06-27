@@ -18,7 +18,7 @@ env = environ.Env()
 environ.Env.read_env('.env')
 
 
-FOLDER = env('PHOTO_FOLDER', str)
+FOLDER = env('PATH_PHOTO_GEOOBJECT', str)
 
 
 app = FastAPI()

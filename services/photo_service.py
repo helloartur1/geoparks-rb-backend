@@ -46,10 +46,10 @@ async def add_photo(
             for photo in file:
                 if photo.content_type == "image/jpeg" or photo.content_type == "image/png":
                     id = uuid.uuid4()
-                    path = PATH_PHOTO_GEOOBJECT + '\\\\' + photo.filename
-                    valid_path_to_photo = PHOTO_FOLDER + '/' + photo.filename
+                    path = PATH_PHOTO_GEOOBJECT + '\\' + photo.filename
+                    # valid_path_to_photo = PHOTO_FOLDER + '/' + photo.filename
 
-                    SyncConn.insert_photo(id, valid_path_to_photo, geoobject_id, preview, photo.filename)
+                    SyncConn.insert_photo(id, path, geoobject_id, preview, photo.filename)
 
                     contents = await photo.read()
                     with open(f"{path}", "wb") as f:
