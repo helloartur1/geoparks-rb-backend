@@ -50,7 +50,7 @@ class geoobject(Base):
     id: Mapped[uidpk]
     name: Mapped[str]
     type: Mapped[str]
-    commonType: Mapped[str]
+    common_type: Mapped[str]
     latitude: Mapped[float]
     longitude: Mapped[float]
     geopark_id: Mapped[UUID4] = mapped_column(ForeignKey("geoparks.id"))
@@ -108,9 +108,9 @@ class routes(Base):
     name: Mapped[str]
     description: Mapped[str | None]
     user_id: Mapped[UUID4]
-    profile: Mapped[str | None]
-    start_latitude: Mapped[float | None]
-    start_longitude: Mapped[float | None]    
+    # profile: Mapped[str | None]
+    # start_latitude: Mapped[float | None]
+    # start_longitude: Mapped[float | None]    
     route_points: Mapped[list["route_points"]] = relationship(
         back_populates="route"
     )

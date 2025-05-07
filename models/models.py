@@ -56,7 +56,7 @@ class GeoobjectModel(BaseModel):
     id: UUID4
     name: str
     type: str
-    commonType: str
+    common_type: str
     latitude: float
     longitude: float
     geopark_id: UUID4
@@ -75,7 +75,7 @@ class GeoobjectModelDTO(BaseModel):
     id: UUID4
     name: str
     type: str
-    commonType: str
+    common_type: str
     latitude: float
     longitude: float
     geopark_id: UUID4
@@ -101,7 +101,7 @@ class PathModel(BaseModel):
 class InsertGeoobjectModel(BaseModel):
     name: str
     type: str
-    commonType: str
+    common_type: str
     latitude: float
     longitude: float
     geopark_id: UUID4
@@ -111,7 +111,7 @@ class InsertGeoobjectModel(BaseModel):
 class UpdateGeoobjectModel(BaseModel):
     name: str | None = None
     type: str | None = None
-    commonType: str | None = None
+    common_type: str | None = None
     latitude: float | None = None
     longitude: float | None = None
     geopark_id: UUID4 | None = None
@@ -133,11 +133,13 @@ class routeDTO(BaseModel):
     name: str | None = None
     description: str | None = None
     user_id: UUID4
-    profile: str | None = None
-    start_latitude: float | None = None
-    start_longitude: float | None = None
     route_points: list[routePointDTO]
 
+class RouteDTO1(BaseModel):
+    id: UUID4
+    name: str | None = None
+    description: str | None = None
+    route_points: list[routePointDTO]
 
 class routesDTO(BaseModel):
     routes: list[routeDTO]

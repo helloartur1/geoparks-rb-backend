@@ -1,8 +1,8 @@
-from sqlalchemy import text, insert, select, update, delete 
+from sqlalchemy import text, insert, select, update, delete
 from sqlalchemy.orm import selectinload
 from database.config.orm_database import sync_engine, sync_session_factory, Base
-from database.config.orm_models import route_points, routes
-from models.models import routeDTO
+from database.config.orm_models import geoobject, geopark, route_points, routes, user
+from models.models import RouteDTO1, routeDTO, routePointDTO
 import asyncio
 
 
@@ -24,9 +24,10 @@ class SyncConn():
                                                  name=route.name,
                                                  description=route.description,
                                                  user_id=user_id,
-                                                 profile=route.profile,
-                                                 start_latitude=route.start_latitude,
-                                                 start_longitude=route.start_longitude)
+                                                #  profile=route.profile,
+                                                #  start_latitude=route.start_latitude,
+                                                #  start_longitude=route.start_longitude
+                                                )
             session.execute(insert_route)
             session.commit()
 
@@ -111,6 +112,7 @@ class SyncConn():
 
             res = session.execute(query)
             result_orm = res.scalars().all()
+            print(result_orm)
             result_dto = [routeDTO.model_validate(row, from_attributes=True) for row in result_orm]
             return result_dto
         
@@ -266,7 +268,31 @@ class SyncConn():
                 return result_dto
             else:
                 return False
+            
+    @staticmethod
+    def select_route_by_geopark_id(geopark_id):  
+        with sync_session_factory() as session:
+            print(f"Executing query with geopark id: {geopark_id}")
+            
+            query = (  
+                select(routes).distinct()   # Set 'routes' as the root entity in the select statement
+                .join(route_points, routes.id == route_points.route_id)  
+                .join(geoobject, route_points.geoobject_id == geoobject.id)  
+                .join(geopark, geoobject.geopark_id == geopark.id)  
+                .where(geopark.id == geopark_id)  
+                .options(selectinload(routes.route_points))  
+            )
+            
+            res = session.execute(query)
+            result_orm = res.scalars().all()
+            print(f"{result_orm=}")
+            
+            # Convert the result to DTO format
+            result_dto = [routeDTO.model_validate(row, from_attributes=True) for row in result_orm]
+            return result_dto
 
+
+            
 
 
 
