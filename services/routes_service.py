@@ -185,3 +185,62 @@ async def delete_route(
         detail="Access denied",
         headers={"WWW-Authenticate": "Bearer"}
     )
+@router.get("/system_routes/{geopark_id}")
+async def get_route_by_geopark(geopark_id: UUID4):
+    return SyncConn.select_route_by_geopark_id(geopark_id)
+
+@router.get("/{route_id}/avg_rate")
+async def get_avg_score_route(route_id: UUID4):
+    avg_score = SyncConn.get_route_score_stats(route_id)
+    return avg_score
+
+@router.post("/{route_id}/rate")
+async def create_route_rating(
+    route_id: UUID4,
+    score: int,
+    current_user: Annotated[models.UserDTO, Depends(get_current_active_auth_user)]
+):
+    """
+    Добавляет новую оценку маршрута.
+    Пользователь может оставить только одну оценку для каждого маршрута.
+    Требуется: route_id, score (1-5)
+    """
+    # Проверяем, что оценка в допустимом диапазоне
+    if score < 1 or score > 5:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Оценка должна быть от 1 до 5"
+        )
+
+    # Проверяем, не оценивал ли уже пользователь этот маршрут
+    existing_score = SyncConn.get_user_score_for_route(route_id, current_user.id)
+    if existing_score:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Вы уже оценили этот маршрут"
+        )
+
+    try:
+        # Добавляем новую оценку
+        score_id = SyncConn.insert_route_score(
+            route_id=route_id,
+            user_id=current_user.id,
+            score=score
+        )
+        
+        return {
+            "message": "Оценка успешно добавлена",
+            "score_id": str(score_id),
+            "route_id": str(route_id),
+            "user_id": str(current_user.id),
+            "score": score
+        }
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка при добавлении оценки: {str(e)}"
+        )
+@router.get("/{route_id}/{user_id}")
+async def get_user_score_by_id(user_id: UUID4,route_id:UUID4):
+    return SyncConn.get_user_score_for_route(route_id,user_id)

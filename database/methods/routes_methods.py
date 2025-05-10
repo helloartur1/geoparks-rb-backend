@@ -1,8 +1,10 @@
-from sqlalchemy import text, insert, select, update, delete
+import uuid
+from sqlalchemy import func, text, insert, select, update, delete 
 from sqlalchemy.orm import selectinload
 from database.config.orm_database import sync_engine, sync_session_factory, Base
-from database.config.orm_models import geoobject, geopark, route_points, routes, user
-from models.models import RouteDTO1, routeDTO, routePointDTO
+from database.config.orm_models import RouteScore, geoobject, geopark, route_points, routes, user
+from models.models import routeDTO, routePointDTO, RouteDTO1
+
 import asyncio
 
 
@@ -26,7 +28,6 @@ class SyncConn():
                                                  user_id=user_id,
                                                 #  profile=route.profile,
                                                 #  start_latitude=route.start_latitude,
-                                                #  start_longitude=route.start_longitude
                                                 )
             session.execute(insert_route)
             session.commit()
@@ -294,20 +295,79 @@ class SyncConn():
 
             
 
+    @staticmethod
+    def select_route_by_geopark_id(geopark_id):  
+        with sync_session_factory() as session:
+            print(f"Executing query with geopark id: {geopark_id}")
+            
+            query = (  
+                select(routes).distinct()  # Set 'routes' as the root entity in the select statement
+                .join(route_points, routes.id == route_points.route_id)  
+                .join(geoobject, route_points.geoobject_id == geoobject.id)  
+                .join(geopark, geoobject.geopark_id == geopark.id)  
+                .where(geopark.id == geopark_id)  
+                .options(selectinload(routes.route_points))  
+            )
+            
+            res = session.execute(query)
+            result_orm = res.scalars().all()
+            print(f"{result_orm=}")
+            
+            # Convert the result to DTO format
+            result_dto = [routeDTO.model_validate(row, from_attributes=True) for row in result_orm]
+            return result_dto
 
+    @staticmethod
+    def insert_route_score(route_id, user_id, score):
+        """Добавляет новую оценку маршрута"""
+        with sync_session_factory() as session:
+            score_id = uuid.uuid4()
+            stmt = (
+                insert(RouteScore)
+                .values(
+                    id=score_id,
+                    route_id=route_id,
+                    user_id=user_id,
+                    score=score
+                )
+            )
+            session.execute(stmt)
+            session.commit()
+            return score_id
 
-# SyncConn.create_table()
-# SyncConn.insert_data_into_routes_and_points()
-# SyncConn.select_routes_with_selectin_relationship()
-
-
-# @staticmethod
-# async def insert_data():
-#     async with async_session_factory() as session:
-#         test_object = test(name="new name")
-#         second_test_object = test(name="second new test name")
-#         session.add_all([test_object, second_test_object])
-#         await session.commit()
-
-
-# asyncio.run(insert_data())
+    @staticmethod
+    def get_route_score_stats(route_id):
+        """Возвращает статистику оценок маршрута"""
+        with sync_session_factory() as session:
+            # Запрос для средней оценки
+            avg_query = (
+                select(func.avg(RouteScore.score))
+                .where(RouteScore.route_id == route_id)
+            )
+            average_score = session.execute(avg_query).scalar()
+            
+            # Запрос для количества оценок
+            count_query = (
+                select(func.count(RouteScore.score))
+                .where(RouteScore.route_id == route_id)
+            )
+            score_count = session.execute(count_query).scalar()
+            
+            return {
+                "average_score": float(average_score) if average_score is not None else 0,
+                "total_ratings": score_count if score_count else 0
+            }
+        
+        
+    @staticmethod
+    def get_user_score_for_route(route_id, user_id):
+        """Проверяет, есть ли уже оценка от пользователя для маршрута"""
+        with sync_session_factory() as session:
+            query = (
+                select(RouteScore)
+                .where(
+                    RouteScore.route_id == route_id,
+                    RouteScore.user_id == user_id
+                )
+            )
+            return session.execute(query).scalar_one_or_none()

@@ -1,6 +1,7 @@
 import datetime
 from typing import Annotated
-from sqlalchemy import MetaData, text, Table, Column, Integer, String, ForeignKey
+import uuid
+from sqlalchemy import UUID, DateTime, MetaData, text, Table, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .orm_database import Base
 from pydantic import UUID4
@@ -18,6 +19,8 @@ updated_at = Annotated[datetime.datetime, mapped_column(
 metadata_obj = MetaData()
 
 
+
+
 # class test(Base):
 #     __tablename__ = "test"
 
@@ -32,7 +35,17 @@ metadata_obj = MetaData()
 #     title: Mapped[str_256]
 #     created_at: Mapped[created_at]
 #     updated_at: Mapped[updated_at]
+class userpoint(Base):
+    __tablename__ = "user_points"
 
+    id : Mapped[uidpk]
+    Type : Mapped[str]
+    latitude: Mapped[float]
+    longitude: Mapped[float]
+    geoparkid: Mapped[UUID4] = mapped_column(ForeignKey("geoparks.id"))
+    userid: Mapped[UUID4] = mapped_column(ForeignKey("users.id"))
+    Comment : Mapped[str]
+    pathphoto : Mapped[str]
 
 class user(Base):
     __tablename__ = "users"
@@ -114,3 +127,12 @@ class routes(Base):
     route_points: Mapped[list["route_points"]] = relationship(
         back_populates="route"
     )
+
+from sqlalchemy.sql import func
+class RouteScore(Base):
+    __tablename__ = 'routes_score'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    route_id = Column(UUID(as_uuid=True), ForeignKey('routes.id'))
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'))
+    score = Column(Integer, nullable=False)
