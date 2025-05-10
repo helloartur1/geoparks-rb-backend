@@ -13,8 +13,8 @@ from auth.auth_services import (
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 import environ
-
-
+from routes import water_routering 
+                
 env = environ.Env()
 environ.Env.read_env('.env')
 
@@ -51,34 +51,35 @@ app.include_router(user_service.router)
 app.include_router(geoobjects_service.router)
 app.include_router(geoparks_service.router)
 app.include_router(photo_service.router)
+app.include_router(water_routering.router)
+
 app.include_router(routes_service.router)
 
+# ORS_API_KEY = "5b3ce3597851110001cf6248f0d961a50bc04e17b315f4ccec8fe8de"
+# ORS_ENDPOINT = "https://api.openrouteservice.org/v2/directions"
 
-ORS_API_KEY = "5b3ce3597851110001cf6248f0d961a50bc04e17b315f4ccec8fe8de"
-ORS_ENDPOINT = "https://api.openrouteservice.org/v2/directions"
+# @app.post("/proxy/openrouteservice")
+# async def proxy_ors(request: Request):
+#     body = await request.json()
+#     print(body)
+#     coordinates = body.get("coordinates")
+#     profile = body.get("profile", "foot-walking")
+#     radiuses = body.get("radiuses", [])
+#     instructions = body.get("instructions", False)
 
-@app.post("/proxy/openrouteservice")
-async def proxy_ors(request: Request):
-    body = await request.json()
-    print(body)
-    coordinates = body.get("coordinates")
-    profile = body.get("profile", "foot-walking")
-    radiuses = body.get("radiuses", [])
-    instructions = body.get("instructions", False)
+#     url = f"{ORS_ENDPOINT}/{profile}/geojson"
 
-    url = f"{ORS_ENDPOINT}/{profile}/geojson"
+#     headers = {
+#         "Authorization": ORS_API_KEY,
+#         "Content-Type": "application/json"
+#     }
 
-    headers = {
-        "Authorization": ORS_API_KEY,
-        "Content-Type": "application/json"
-    }
-
-    payload = {
-        "coordinates": coordinates,
-        "radiuses": radiuses,
-        "instructions": instructions
-    }
-    async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=payload, headers=headers)
-        print(response.status_code, " ",response)
-        return response.json()
+#     payload = {
+#         "coordinates": coordinates,
+#         "radiuses": radiuses,
+#         "instructions": instructions
+#     }
+#     async with httpx.AsyncClient() as client:
+#         response = await client.post(url, json=payload, headers=headers)
+#         print(response.status_code, " ",response)
+#         return response.json()
