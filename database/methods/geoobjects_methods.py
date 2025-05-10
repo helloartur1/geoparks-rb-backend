@@ -78,7 +78,7 @@ class SyncConn():
                     id=geoobject_id,
                     name=new_geoobject.name,
                     type=new_geoobject.type,
-                    commonType=new_geoobject.commonType,
+                    common_type=new_geoobject.common_type,
                     latitude=new_geoobject.latitude,
                     longitude=new_geoobject.longitude,
                     geopark_id=new_geoobject.geopark_id,
@@ -118,7 +118,7 @@ class SyncConn():
             stmt = (
                 update(geoobject)
                 .where(geoobject.id == id)
-                .values(commonType=common_type)
+                .values(common_type=common_type)
             )
             session.execute(stmt)
             session.commit()

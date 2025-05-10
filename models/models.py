@@ -1,4 +1,7 @@
-from pydantic import BaseModel, UUID4
+from typing import Optional
+from uuid import uuid4
+from pydantic import BaseModel, UUID4, Field
+from sqlalchemy import UUID
 from typing_extensions import List
 
 
@@ -56,7 +59,7 @@ class GeoobjectModel(BaseModel):
     id: UUID4
     name: str
     type: str
-    commonType: str
+    common_type: str
     latitude: float
     longitude: float
     geopark_id: UUID4
@@ -64,10 +67,10 @@ class GeoobjectModel(BaseModel):
 
 
 class PhotoModel(BaseModel):
-    id: UUID4
+    id: UUID4 
     path: str
     geoobject_id: UUID4
-    preview: bool
+    preview: bool = None
     name: str
 
 
@@ -75,13 +78,21 @@ class GeoobjectModelDTO(BaseModel):
     id: UUID4
     name: str
     type: str
-    commonType: str
+    common_type: str
     latitude: float
     longitude: float
     geopark_id: UUID4
     description: str
     photos: list[PhotoModel]
 
+class UsersPoint(BaseModel):
+    id : UUID4
+    Type : str 
+    latitude: float
+    longitude: float 
+    Comment : str
+    pathphoto : str = ""
+    geoparkid : UUID4
 
 # class GeoobjectModelDetail(BaseModel):
 #     id: UUID4
@@ -101,7 +112,7 @@ class PathModel(BaseModel):
 class InsertGeoobjectModel(BaseModel):
     name: str
     type: str
-    commonType: str
+    common_type: str
     latitude: float
     longitude: float
     geopark_id: UUID4
@@ -111,7 +122,7 @@ class InsertGeoobjectModel(BaseModel):
 class UpdateGeoobjectModel(BaseModel):
     name: str | None = None
     type: str | None = None
-    commonType: str | None = None
+    common_type: str | None = None
     latitude: float | None = None
     longitude: float | None = None
     geopark_id: UUID4 | None = None
@@ -193,3 +204,13 @@ class pointsChangeModel(BaseModel):
 class routeAndPointsChangeModel(BaseModel):
     route: routeChangeModel | None = None
     points: list[pointsChangeModel] | None = None
+
+class RouteScoreResponse(BaseModel):
+    id: UUID4
+    route_id: UUID4
+    user_id: UUID4
+    score: int
+
+
+class RouteScoreCreate(BaseModel):
+    score: int = Field(..., ge=1, le=5, description="Оценка от 1 до 5")
