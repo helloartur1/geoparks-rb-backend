@@ -144,11 +144,13 @@ class routeDTO(BaseModel):
     name: str | None = None
     description: str | None = None
     user_id: UUID4
-    profile: str | None = None
-    start_latitude: float | None = None
-    start_longitude: float | None = None
     route_points: list[routePointDTO]
 
+class RouteDTO1(BaseModel):
+    id: UUID4
+    name: str | None = None
+    description: str | None = None
+    route_points: list[routePointDTO]
 
 class routesDTO(BaseModel):
     routes: list[routeDTO]

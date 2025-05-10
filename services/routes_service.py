@@ -93,6 +93,10 @@ async def post_route(
             headers={"WWW-Authenticate": "Bearer"}
         )
 
+@router.get("/system_routes/{geopark_id}")
+async def get_route_by_geopark(geopark_id: UUID4):
+    return SyncConn.select_route_by_geopark_id(geopark_id)
+
 
 @router.put("/")
 async def put_route(
