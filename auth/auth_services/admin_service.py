@@ -31,41 +31,33 @@ async def get_all_users(current_user: Annotated[models.UserDTO, Depends(get_curr
     )
 
 
-@router.post("/")  # роут для создания пользователя
+@router.post("/")  # роут для создания пользователя без авторизации
 async def create_user(
     username: Annotated[str, Form],
     password: Annotated[str, Form],
-    role: Annotated[str, Form],
-    current_user: Annotated[models.UserDTO, Depends(get_current_active_auth_user)]
+    role: Annotated[str, Form]
 ):
-    if current_user.role == "admin":
-        if not SyncConn.select_user(username):
-            id = uuid.uuid4()
-            password = password_func.hash_password(password)
+    if not SyncConn.select_user(username):
+        id = uuid.uuid4()
+        password = password_func.hash_password(password)
 
-            SyncConn.insert_user(
-                id, 
-                username, 
-                password,
-                role
-            )
-
-            raise HTTPException(
-                status_code=status.HTTP_200_OK,
-                detail="Successfully uploaded"
-            )
+        SyncConn.insert_user(
+            id,
+            username,
+            password,
+            role
+        )
 
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="User with that username already exist"
+            status_code=status.HTTP_200_OK,
+            detail="Successfully uploaded"
         )
-    
+
     raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="Access denied",
-        headers={"WWW-Authenticate": "Bearer"}
+        status_code=status.HTTP_409_CONFLICT,
+        detail="User with that username already exist"
     )
-    
+
 
 @router.put("/")  # роут для изменения роли пользователя
 async def update_user_data(

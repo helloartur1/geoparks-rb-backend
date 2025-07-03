@@ -9,25 +9,16 @@ import pyproj
 
 router = APIRouter(prefix="/water-route", tags=["water-routing"])
 
-# -----------------------------
-# Pydantic models
-# -----------------------------
 class RouteResponse(BaseModel):
-    coordinates: list[tuple[float, float]]  # List of (lon, lat)
-    distance: float                         # in meters
-    duration: float | None = None          # optional
-    ascent: float | None = None            # optional
-    descent: float | None = None           # optional
+    coordinates: list[tuple[float, float]]  
+    distance: float                        
+    duration: float | None = None        
+    ascent: float | None = None            
+    descent: float | None = None          
 
-# -----------------------------
-# Projection transformers
-# -----------------------------
 _proj_to_merc = pyproj.Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
 _proj_to_wgs = pyproj.Transformer.from_crs("EPSG:3857", "EPSG:4326", always_xy=True)
 
-# -----------------------------
-# Helper: densify path
-# -----------------------------
 def densify_path(coords: list[tuple[float, float]], max_dist: float = 5.0) -> tuple[list[tuple[float, float]], float]:
     if not coords:
         return [], 0.0
@@ -48,15 +39,11 @@ def densify_path(coords: list[tuple[float, float]], max_dist: float = 5.0) -> tu
         densified.append((lon, lat))
     return densified, total_length
 
-# -----------------------------
-# Load and cache water graph
-# -----------------------------
 @lru_cache(maxsize=1)
 def load_water_graph() -> nx.MultiDiGraph:
     graph_file = os.getenv("WATER_GRAPH_FILE", "data/bashkortostan_water.graphml")
     if os.path.exists(graph_file):
         return ox.load_graphml(graph_file)
-    # Download graph from Overpass without simplification
     gdf = ox.geocode_to_gdf("Republic of Bashkortostan, Russia")
     if gdf.empty:
         raise RuntimeError("Cannot fetch boundaries for Bashkortostan")
@@ -68,31 +55,23 @@ def load_water_graph() -> nx.MultiDiGraph:
         custom_filter=custom_filter,
         simplify=False  # preserve all vertices
     )
-    # Do NOT simplify the graph: retain detailed geometry
-    # G = ox.simplify_graph(G)
     os.makedirs(os.path.dirname(graph_file), exist_ok=True)
     ox.save_graphml(G, graph_file)
     return G
 
-# -----------------------------
-# Compute route
-# -----------------------------
 def compute_water_route(
     G: nx.MultiDiGraph,
     origin: tuple[float, float],  # (lat, lon)
     destination: tuple[float, float]
 ) -> tuple[list[tuple[float, float]], float]:
-    # Find nearest graph nodes
     orig_node = ox.distance.nearest_nodes(G, X=origin[1], Y=origin[0])
     dest_node = ox.distance.nearest_nodes(G, X=destination[1], Y=destination[0])
 
-    # Compute shortest path by node IDs
     try:
         route_nodes = nx.shortest_path(G, source=orig_node, target=dest_node, weight="length")
     except nx.NetworkXNoPath:
         route_nodes = []
 
-    # If no path, fallback straight line
     if len(route_nodes) < 2:
         start = (origin[1], origin[0])
         end = (destination[1], destination[0])
@@ -101,19 +80,14 @@ def compute_water_route(
         length = ((x2-x1)**2 + (y2-y1)**2)**0.5
         return [start, end], length
 
-    # Collect node coordinates (lon,lat) in order
     node_coords = [(G.nodes[n]['x'], G.nodes[n]['y']) for n in route_nodes]
-    # Compute total length by summing edge lengths
     length = 0.0
     for u, v in zip(route_nodes[:-1], route_nodes[1:]):
         data = next(iter(G.get_edge_data(u, v).values()))
         length += data.get('length', 0)
 
-    # Densify along straight line through nodes
-    # project to mercator
     merc_pts = [_proj_to_merc.transform(lon, lat) for lon, lat in node_coords]
     line = LineString(merc_pts)
-    # densify at 5m intervals
     intervals = list(range(0, int(line.length), 5))
     intervals.append(int(line.length))
     densified: list[tuple[float, float]] = []
@@ -124,7 +98,6 @@ def compute_water_route(
         lon, lat = _proj_to_wgs.transform(pt.x, pt.y)
         densified.append((lon, lat))
 
-    # Override endpoints exactly
     start = (origin[1], origin[0])
     end = (destination[1], destination[0])
     densified[0] = start
@@ -132,9 +105,6 @@ def compute_water_route(
 
     return densified, length
 
-# -----------------------------
-# API endpoint
-# -----------------------------
 @router.get("", response_model=RouteResponse)
 def route_water(
     origin_lat: float = Query(..., alias="origin.lat"),
